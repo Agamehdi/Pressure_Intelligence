@@ -14,7 +14,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-Open the local address printed by Streamlit (typically http://localhost:8501) and upload your actual workbook using the left sidebar. Choose the `All Pressure Data` worksheet. Without a file, the app starts in **clearly marked SYNTHETIC DEMO** mode.
+Open the local address printed by Streamlit (typically http://localhost:8501) and upload your actual workbook using the left sidebar. Choose the `All Pressure Data` worksheet. Without a file, the app starts in **clearly marked SYNTHETIC DEMO** mode. If `sample_data/synthetic_pressure_demo.csv` is absent from GitHub, an in-memory synthetic dataset is generated automatically; no file-not-found crash.
 
 ### Optional, local auto-load for your real dataset
 
@@ -23,7 +23,7 @@ Save your real workbook locally as `data/Daman_Pressure_Data_Compiled.xlsx`. The
 ## GitHub and Streamlit Cloud deployment
 
 1. Create a new GitHub repository.
-2. Upload `app.py`, `data_engine.py`, `requirements.txt`, `.streamlit/config.toml`, `sample_data/synthetic_pressure_demo.csv`, `.gitignore`, and this README.
+2. Upload **at least** `app.py`, `data_engine.py`, and `requirements.txt` to the repository root. `.streamlit/config.toml`, `sample_data/synthetic_pressure_demo.csv`, `.gitignore`, and this README are recommended but the demo CSV is now optional.
 3. **Do not upload your real field-pressure Excel to a public repository.**
 4. In Streamlit Community Cloud, choose **New app**, select the repository, branch (`main`) and main file `app.py`.
 5. Deploy. In the launched app, upload your real workbook at runtime.
@@ -82,3 +82,8 @@ The ZIP also contains `Spotfire_Summary_Custom.csv`, `Spotfire_Summary_Sand_Type
 ## Limitations
 
 The tool has no model-based pressure normalization to a common datum and no rigorous material-balance pressure reconstruction. Those would require PVT, datum, density, contacts, well status, pressure history and uncertainty context not present in the uploaded source. QC labels must be reviewed by an engineer before decisions.
+
+
+## Fix: `FileNotFoundError` at `DEMO_FILE.read_bytes()` (v2)
+
+On GitHub, directory uploads may skip `sample_data/`. The application now falls back to a deterministic in-memory synthetic demo if the CSV is missing or cannot be read. Uploading your workbook in the sidebar takes precedence. To apply the fix to an existing deployment, replace **both** `app.py` and `data_engine.py` with the v2 files, commit changes, and reboot/redeploy the Streamlit app.

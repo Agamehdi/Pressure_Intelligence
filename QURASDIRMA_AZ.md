@@ -27,3 +27,10 @@ streamlit run app.py
 - Save/load dashboard settings JSON.
 
 **Vacib:** Real korporativ təzyiq məlumatlarını public Streamlit host-a göndərmək üçün əvvəlcə şirkətinizin informasiya təhlükəsizliyi qaydalarını yoxlayın. Tətbiq datası sessiya yaddaşında işləyir, lakin hostinq platformasının qaydaları ayrıca qiymətləndirilməlidir.
+
+
+## FileNotFoundError düzəlişi (v2)
+
+GitHub-a `sample_data` qovluğu yüklənməyibsə, əvvəlki versiya dayana bilərdi. Yeni versiya demo faylı olmadıqda **süni demo məlumatını avtomatik RAM-da yaradır**. Real məlumat üçün sol paneldən Excel yükləmək kifayətdir.
+
+Mövcud GitHub repository-sində **hər iki faylı (`app.py` və `data_engine.py`) yenisi ilə əvəz et** və GitHub-a commit et. Streamlit Cloud avtomatik yenilənməlidir; lazım gələrsə, reboot et. `sample_data` qovluğunun olması artıq şərt deyil.

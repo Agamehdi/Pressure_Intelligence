@@ -6,7 +6,7 @@ import zipfile
 
 import pandas as pd
 
-from data_engine import prepare_data, qc_summary, spotfire_long, trend_summary, build_spotfire_zip, export_excel
+from data_engine import prepare_data, qc_summary, spotfire_long, trend_summary, build_spotfire_zip, export_excel, make_synthetic_demo
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -15,6 +15,17 @@ class EngineTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.demo = prepare_data(pd.read_csv(ROOT / 'sample_data' / 'synthetic_pressure_demo.csv'), 'Synthetic demo')
+
+    def test_builtin_demo_no_file_required(self):
+        synthetic = make_synthetic_demo()
+        self.assertGreater(len(synthetic), 50)
+        self.assertEqual(synthetic["Field"].nunique(), 1)
+        self.assertEqual(synthetic["Field"].iloc[0], "SYNTHETIC DEMO")
+        prepared = prepare_data(synthetic, "built_in_synthetic_demo.csv")
+        self.assertGreater(prepared["Date Reliable"].sum(), 40)
+        self.assertGreater(prepared["Flag · Spud date proxy"].sum(), 0)
+        self.assertFalse(trend_summary(prepared).empty)
+        self.assertGreater(len(build_spotfire_zip(prepared, ["Pay Zone (Sand)"])), 1000)
 
     def test_demo_values(self):
         self.assertGreater(len(self.demo), 50)

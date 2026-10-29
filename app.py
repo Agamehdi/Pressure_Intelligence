@@ -21,6 +21,7 @@ from data_engine import (
     FAMILY_DESCRIPTIONS, RESERVOIR_FAMILIES, PSI_PER_KSC,
     prepare_data, qc_summary, group_summary, trend_summary,
     calculate_trend_rates, spotfire_long, build_spotfire_zip, export_excel,
+    make_synthetic_demo,
 )
 
 ROOT = Path(__file__).resolve().parent
@@ -188,8 +189,18 @@ with st.sidebar:
         payload = DEFAULT_PRIVATE_DATA.read_bytes()
         filename, suffix = DEFAULT_PRIVATE_DATA.name, ".xlsx"
     else:
-        payload = DEMO_FILE.read_bytes()
-        filename, suffix = DEMO_FILE.name, ".csv"
+        # GitHub's web uploader can omit sample_data/ (or users may choose to
+        # upload only app.py + data_engine.py). Never require a local demo file.
+        # Keep the app usable by generating a deterministic demo in memory.
+        try:
+            if not DEMO_FILE.is_file():
+                raise FileNotFoundError(f"Optional demo file absent: {DEMO_FILE}")
+            payload = DEMO_FILE.read_bytes()
+            filename = DEMO_FILE.name
+        except OSError:
+            payload = make_synthetic_demo().to_csv(index=False).encode("utf-8")
+            filename = "built_in_synthetic_demo.csv"
+        suffix = ".csv"
         using_demo = True
     sheet = None
     if suffix in (".xlsx", ".xlsm"):
