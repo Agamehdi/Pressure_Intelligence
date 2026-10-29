@@ -1,0 +1,12 @@
+# Keep real oilfield pressure data out of PUBLIC Git repositories
+/data/*
+!/data/.gitkeep
+*.xlsx
+*.xlsm
+*.xls
+__pycache__/
+.pytest_cache/
+.DS_Store
+.venv/
+*.pyc
+.streamlit/secrets.toml

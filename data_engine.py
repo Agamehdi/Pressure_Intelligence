@@ -34,56 +34,6 @@ FAMILY_DESCRIPTIONS = {
 RESERVOIR_FAMILIES = ["Static BHP", "Formation tester", "Reservoir estimate"]
 
 
-def make_synthetic_demo() -> pd.DataFrame:
-    """In-memory demonstration data; Streamlit Cloud does not need sample_data files.
-
-    All values are artificial, and no proprietary measurements are embedded.
-    The generator is deterministic, with multiple dates per well and sand.
-    """
-    records = []
-    for sand_i, sand in enumerate(("Sand-30", "Sand-40", "Sand-50")):
-        for well_i in range(1, 7):
-            well = f"DEMO-{sand_i + 1}{well_i:02d}"
-            depth = 2130 + sand_i * 210 + well_i * 15
-            area = "DEMO-AREA-A" if well_i <= 3 else "DEMO-AREA-B"
-            for sample_i, year in enumerate((2017, 2019, 2021, 2023, 2025)):
-                pressure = round(2850 + 270 * sand_i - 56 * sample_i + well_i * 13, 1)
-                records.append({
-                    "Well Name": well,
-                    "Field": "SYNTHETIC DEMO",
-                    "Formation": "Demo Sandstone",
-                    "Depth (m TVDSS)": depth,
-                    "Pressure (psi)": pressure,
-                    "Pressure (ksc)": round(pressure / PSI_PER_KSC, 4),
-                    "Pressure Type / Measurement": "RFT – Repeat Formation Tester (wireline)",
-                    "Pay Zone (Sand)": sand,
-                    "Block / Area": area,
-                    "Date": f"{year}-08-10",
-                    "Depth Note": "Measured (m TVDSS, per source)",
-                    "Tested Interval / Choke": "",
-                    "Remarks": "Synthetic example — not a real field measurement",
-                    "Source Tab": "Synthetic demo",
-                })
-            # A distinctly classified operational pressure. Its date is a proxy.
-            whp = round(890 + 80 * sand_i + 15 * well_i, 1)
-            records.append({
-                "Well Name": well,
-                "Field": "SYNTHETIC DEMO",
-                "Formation": "Demo Sandstone",
-                "Depth (m TVDSS)": np.nan,
-                "Pressure (psi)": whp,
-                "Pressure (ksc)": round(whp / PSI_PER_KSC, 4),
-                "Pressure Type / Measurement": "FTHP – Flowing tubing-head pressure (DST)",
-                "Pay Zone (Sand)": sand,
-                "Block / Area": area,
-                "Date": "2022-03-14",
-                "Depth Note": "Wellhead (surface)",
-                "Tested Interval / Choke": "",
-                "Remarks": "Date shown = well spud date (DST date not in source); synthetic",
-                "Source Tab": "Synthetic demo",
-            })
-    return pd.DataFrame.from_records(records)
-
 
 def _clean_string(s: pd.Series, default: str = "Not specified") -> pd.Series:
     out = s.astype("string").str.strip()

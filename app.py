@@ -21,12 +21,7 @@ from data_engine import (
     FAMILY_DESCRIPTIONS, RESERVOIR_FAMILIES, PSI_PER_KSC,
     prepare_data, qc_summary, group_summary, trend_summary,
     calculate_trend_rates, spotfire_long, build_spotfire_zip, export_excel,
-    make_synthetic_demo,
 )
-
-ROOT = Path(__file__).resolve().parent
-DEFAULT_PRIVATE_DATA = ROOT / "data" / "Daman_Pressure_Data_Compiled.xlsx"
-DEMO_FILE = ROOT / "sample_data" / "synthetic_pressure_demo.csv"
 
 PALETTES = {
     "Vibrant / Signature": ["#126BFF", "#FF623B", "#7F44F1", "#00BFA5", "#F63F81", "#F0A202", "#12A6DE", "#75C91C", "#445FDC", "#E85EED"],
@@ -48,12 +43,8 @@ st.set_page_config(
 CSS = """
 <style>
 :root {--ink:#13233C;--muted:#62748B;--blue:#126BFF;--line:#E5ECF5;--soft:#F5F8FD;}
-html, body, [data-testid="stAppViewContainer"], [data-testid="stMain"], .main {background:#FFFFFF !important;}
-[data-testid="stHeader"] {background:rgba(255,255,255,.90) !important;}
-[data-testid="stSidebar"] {background:#F8FAFF !important; border-right:1px solid #E5EDF7;}
-[data-testid="stSidebar"] * {font-family:Inter, Aptos, 'Segoe UI', Arial, sans-serif;}
-html, body, p, h1, h2, h3, h4, label, div, button {font-family:Inter, Aptos, 'Segoe UI', Arial, sans-serif;}
 .block-container {padding-top:1.25rem; padding-bottom:3rem; max-width:1600px;}
+.daman-hero, .daman-hero *, .section-eyebrow, .section-title, .info-note, .daman-empty, .daman-empty * {font-family:Inter, 'Segoe UI', Arial, sans-serif;}
 .daman-hero {padding:23px 29px 21px;background:linear-gradient(110deg,#FFFFFF 0%,#F4F8FF 73%,#EDFAFF 100%);
   border:1px solid #E1ECFA;border-radius:20px;margin:0 0 19px;position:relative;overflow:hidden;}
 .daman-hero::after {content:'';position:absolute;right:-90px;top:-120px;width:330px;height:330px;
@@ -82,9 +73,22 @@ div[data-testid="stExpander"] {border:1px solid #E7EDF5;border-radius:12px;backg
  font-size:12px;line-height:1.6;border-radius:0 9px 9px 0;margin:11px 0 15px;}
 .info-note.warn {border-left-color:#EA9715;background:#FFF9ED;color:#77552C;}
 .small-label {color:#71839A;font-weight:700;font-size:11px;}
+.daman-empty {margin:18px 0 22px;padding:45px 32px;text-align:center;border:1.5px dashed #D2DFF0;
+ background:#FFFFFF;border-radius:20px;}
+.daman-empty-icon {font-size:42px;margin-bottom:8px;}
+.daman-empty-heading {font-size:23px;font-weight:850;color:#173154;letter-spacing:-.5px;}
+.daman-empty-body {font-size:14px;line-height:1.8;color:#60728B;margin:9px auto 0;max-width:650px;}
+.daman-empty-kicker {font-size:11px;font-weight:850;letter-spacing:1.7px;color:#2166D7;margin-top:20px;}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
+
+HERO_HTML = """<div class="daman-hero">
+<div class="daman-kicker">RESERVOIR DATA INTELLIGENCE / ANALYTICS WORKSTATION</div>
+<div class="daman-title">Daman Pressure Intelligence <span style="color:#126BFF">✦</span></div>
+<div class="daman-sub">Explore pressure architecture, vertical distribution, time behaviour, well-level diagnostics, quality assurance and Spotfire-ready exports — with a clean white canvas and vibrant interactive visualization.</div>
+<div><span class="daman-chip">✦ Pressure × Depth</span><span class="daman-chip">✦ Well & Sand Explorer</span><span class="daman-chip">✦ Time-Series Intelligence</span><span class="daman-chip">✦ Spotfire Integration</span></div>
+</div>"""
 
 
 def section(kicker: str, title: str, subtitle: str = "") -> None:
@@ -174,34 +178,32 @@ def render_dataframe(data: pd.DataFrame, key: str, height: int = 310, search: bo
 
 
 # ================ DATA & SIDEBAR ================
+# Never auto-load a private file or demo. On first open, wait for an upload.
 with st.sidebar:
     st.markdown("### 💠 Daman Intelligence")
     st.caption("Pressure analytics · technical QC · Spotfire-ready exports")
     st.markdown("#### 📂 Data source")
     uploaded = st.file_uploader("Upload pressure measurements", type=["xlsx", "xlsm", "csv"],
                                 help="Excel and CSV with Well Name and pressure column(s).")
-    using_demo = False
-    if uploaded is not None:
-        payload = uploaded.getvalue()
-        suffix = Path(uploaded.name).suffix.lower()
-        filename = uploaded.name
-    elif DEFAULT_PRIVATE_DATA.exists():
-        payload = DEFAULT_PRIVATE_DATA.read_bytes()
-        filename, suffix = DEFAULT_PRIVATE_DATA.name, ".xlsx"
-    else:
-        # GitHub's web uploader can omit sample_data/ (or users may choose to
-        # upload only app.py + data_engine.py). Never require a local demo file.
-        # Keep the app usable by generating a deterministic demo in memory.
-        try:
-            if not DEMO_FILE.is_file():
-                raise FileNotFoundError(f"Optional demo file absent: {DEMO_FILE}")
-            payload = DEMO_FILE.read_bytes()
-            filename = DEMO_FILE.name
-        except OSError:
-            payload = make_synthetic_demo().to_csv(index=False).encode("utf-8")
-            filename = "built_in_synthetic_demo.csv"
-        suffix = ".csv"
-        using_demo = True
+    if uploaded is None:
+        st.caption("No data loaded. Upload an Excel or CSV file to start.")
+
+if uploaded is None:
+    st.markdown(HERO_HTML, unsafe_allow_html=True)
+    st.markdown('''<div class="daman-empty">
+      <div class="daman-empty-icon">📂</div>
+      <div class="daman-empty-heading">Ready when your data is</div>
+      <div class="daman-empty-body">Upload your pressure Excel or CSV using the sidebar to activate
+      every dashboard tab, interactive chart, data-quality check and Spotfire export.
+      No sample or synthetic data is loaded automatically.</div>
+      <div class="daman-empty-kicker">SUPPORTED · XLSX / XLSM / CSV</div>
+    </div>''', unsafe_allow_html=True)
+    st.stop()
+
+with st.sidebar:
+    payload = uploaded.getvalue()
+    suffix = Path(uploaded.name).suffix.lower()
+    filename = uploaded.name
     sheet = None
     if suffix in (".xlsx", ".xlsm"):
         sheetnames = read_sheetnames(payload)
@@ -212,10 +214,7 @@ with st.sidebar:
         st.error(f"Cannot load dataset: {exc}")
         st.info("Expected columns: Well Name, Pressure (psi) and/or Pressure (ksc); other Daman columns are optional.")
         st.stop()
-    if using_demo:
-        st.warning("SYNTHETIC DEMO data in use. Upload your actual workbook to analyze Daman measurements.")
-    else:
-        st.success(f"Loaded {len(all_df):,} measurements")
+    st.success(f"Loaded {len(all_df):,} measurements")
 
     st.divider()
     st.markdown("#### 🎛 Global filters")
@@ -302,16 +301,8 @@ if date_start is not None and date_end is not None:
     df = df[in_window | (df["Date"].isna() if is_full_window else False)]
 df = df.copy()
 
-st.markdown('''<div class="daman-hero">
-<div class="daman-kicker">RESERVOIR DATA INTELLIGENCE / ANALYTICS WORKSTATION</div>
-<div class="daman-title">Daman Pressure Intelligence <span style="color:#126BFF">✦</span></div>
-<div class="daman-sub">Explore pressure architecture, vertical distribution, time behaviour, well-level diagnostics, quality assurance and Spotfire-ready exports — with a clean white canvas and vibrant interactive visualization.</div>
-<div><span class="daman-chip">✦ Pressure × Depth</span><span class="daman-chip">✦ Well & Sand Explorer</span><span class="daman-chip">✦ Time-Series Intelligence</span><span class="daman-chip">✦ Spotfire Integration</span></div>
-</div>''', unsafe_allow_html=True)
-if using_demo:
-    st.warning("🧪 **Synthetic demonstration mode.** Metrics and plots shown here are artificial. Upload `Daman_Pressure_Data_Compiled.xlsx` in the sidebar to view real values.")
-else:
-    st.caption(f"Data source: **{filename}** · Rows in active filter: **{len(df):,}** / {len(all_df):,} · Source measurements are preserved and contextual QC flags are additive.")
+st.markdown(HERO_HTML, unsafe_allow_html=True)
+st.caption(f"Data source: **{filename}** · Rows in active filter: **{len(df):,}** / {len(all_df):,} · Source measurements are preserved and contextual QC flags are additive.")
 
 if df.empty:
     st.warning("No records match the active filters. Relax one or more filters in the sidebar.")
